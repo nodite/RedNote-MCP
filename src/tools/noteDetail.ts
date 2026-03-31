@@ -15,6 +15,15 @@ export interface NoteDetail {
   comments?: number
 }
 
+// Module-level export so unit tests can call this directly.
+// IMPORTANT: keep in sync with the identical copy inside getContent below.
+export function chineseUnitStrToNumber(str: string): number {
+  if (str.includes('万')) {
+    return Number(str.replace('万', '').trim()) * 10000
+  }
+  return Number(str)
+}
+
 export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   // Wait for content to load
   logger.info('Waiting for content to load')
@@ -22,6 +31,8 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   await page.waitForSelector('.media-container')
 
   async function getContent() {
+    // Browser-side copy — page.evaluate runs in a sandbox with no module scope.
+    // IMPORTANT: keep in sync with the module-level chineseUnitStrToNumber above.
     function ChineseUnitStrToNumber(str: string) {
       if (str.includes('万')) {
         return Number(str.replace('万', '').trim()) * 10000
@@ -50,7 +61,6 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
 
     // Get author info
     const authorElement = article.querySelector('.author-container .info')
-    const authorAvatarURL = authorElement?.querySelector('.avatar-item')?.getAttribute('src') || ''
     const author = authorElement?.querySelector('.username')?.textContent?.trim() || ''
 
     const interactContainer = document.querySelector('.interact-container')
