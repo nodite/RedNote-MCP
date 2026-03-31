@@ -2,78 +2,85 @@
 
 ## 概述
 
-为 `@nodite/rednote-mcp` 配置 GitHub Actions 自动发布流程，在创建 GitHub Release 时自动检查、构建并发布到 npm。**此设计覆写现有的 `.github/workflows/npm-publish.yml`**（同一文件路径，不新增文件），避免两个 workflow 并存导致重复发布。
+为 `@nodite/rednote-mcp` 配置 GitHub Actions 全自动发布流程。在 Actions 页面手动触发，选择版本类型（patch/minor/major），由 workflow 自动完成：版本计算 → 更新 `package.json` → 推送 commit + tag → 发布到 npm → 创建 GitHub Release。
+
+**此设计覆写现有的 `.github/workflows/npm-publish.yml`**，替换整个文件内容（包括整个 `on:` 块），移除原有的 `push: branches: main` 和 `tags: v*` 触发器，避免并存导致重复发布。
 
 ## 触发条件
 
-- **事件**：`release` / `published`
-- 仅在点击 "Publish release" 时触发（包括勾选了 "Set as a pre-release" 的 Release）
-- **设计取舍**：不过滤 pre-release，发布者需自行确保不误点发布。若未来需要过滤，可在 workflow 中添加 `if: github.event.release.prerelease == false`
-- tag 格式不做额外校验，由发布者自行保证 `v<major>.<minor>.<patch>` 格式
-
-## 架构：单 Job 顺序执行
-
-选择单 Job 方案，职责集中、失败即停、无需跨 Job 传递 artifact。
-
 ```yaml
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 ```
+
+在 GitHub Actions 页面手动触发，选择版本类型后点击运行。**只能在 `main` 分支上运行**（job 级别加 `if: github.ref == 'refs/heads/main'`），避免误在 feature 分支触发。
 
 ## 权限
 
-在 workflow 级别显式声明，限制为最小权限：
-
 ```yaml
 permissions:
-  contents: read
+  contents: write  # push commit + tag + 创建 GitHub Release
 ```
+
+`GITHUB_TOKEN` 由 GitHub 自动注入，commit 显示为 `github-actions[bot]` 身份。
 
 ## Job 步骤
 
-| 步骤 | 命令 | 说明 |
-|------|------|------|
-| 1. Checkout | `actions/checkout@v4` | 拉取代码 |
-| 2. Setup Node.js | `actions/setup-node@v4`，Node `20.x`，`registry-url: https://registry.npmjs.org` | 使用浮动小版本（有意简化，优先获取安全补丁）；配置 npm registry，激活 `NODE_AUTH_TOKEN` 鉴权 |
-| 3. 安装依赖 | `npm ci` | 使用 lock file 精确安装 |
-| 4. 类型检查 | `npx tsc --noEmit` | 失败则阻止发布 |
-| 5. 构建 | `npm run build` | 生成 `dist/`；`tsc` 只编译 TS 文件，不读取 `package.json` 版本号，因此在版本同步之前构建不影响发布包的版本一致性 |
-| 6. 同步版本号 | `npm pkg set version="$VERSION"` | 从 Release tag 提取版本后直接写入 `package.json`，幂等，不触发 lifecycle hooks |
-| 7. 发布 | `npm publish --access public --ignore-scripts` | `--ignore-scripts` 避免 `prepublishOnly`（`npm run build`）再次触发重复构建；`NODE_AUTH_TOKEN` 通过 env 注入 |
+| 步骤 | id | 命令 | 说明 |
+|------|----|------|------|
+| 1. Checkout | — | `actions/checkout@v4`（默认 `fetch-depth: 1`） | 浅克隆足以推送 commit；`--generate-notes` 依赖 GitHub API |
+| 2. Setup Node.js | — | `actions/setup-node@v4`，Node `20.x`，`registry-url: https://registry.npmjs.org` | 配置 npm registry，激活 `NODE_AUTH_TOKEN` 鉴权 |
+| 3. 配置 git user | — | `git config user.name "github-actions[bot]"` / `git config user.email "41898282+github-actions[bot]@users.noreply.github.com"` | 标准 bot 身份，固定 ID `41898282` |
+| 4. 安装依赖 | — | `npm ci` | 使用 lock file 精确安装 |
+| 5. 类型检查 | — | `npx tsc --noEmit` | 失败则终止，不修改任何文件 |
+| 6. 构建 | — | `npm run build` | 生成 `dist/`；失败则终止，不修改任何文件 |
+| 7. 更新版本号 | — | `npm version ${{ inputs.version_type }} --no-git-tag-version` | 同时更新 `package.json` 和 `package-lock.json`，不产生 commit/tag |
+| 8. 读取新版本 | `version` | `echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT` | 通过 `$GITHUB_OUTPUT` 导出；后续步骤用 `${{ steps.version.outputs.VERSION }}` 引用 |
+| 9. Git commit | — | `git diff --quiet && git diff --staged --quiet \|\| git commit -am "chore: bump version to v${{ steps.version.outputs.VERSION }}"` | 提交 `package.json` 和 `package-lock.json` 变更；防御性检查避免 nothing-to-commit 报错 |
+| 10. Git tag | — | `git tag v${{ steps.version.outputs.VERSION }}` | 创建版本 tag |
+| 11. Git push | — | `git push origin HEAD:${{ github.ref_name }} --tags` | 动态引用当前分支；同时推送 commit 和 tag |
+| 12. 发布 npm | — | `npm publish --access public --ignore-scripts` | `--ignore-scripts` 跳过所有 lifecycle scripts（包括 `prepublishOnly: npm run build`），有意为之，因构建已在步骤 6 完成。**约束：`prepublishOnly` 不得添加除构建以外的步骤，否则需同步修改此 workflow** |
+| 13. 创建 Release | — | `gh release create v${{ steps.version.outputs.VERSION }} --generate-notes --title "v${{ steps.version.outputs.VERSION }}"` | 通过 GitHub API 生成 Release Notes（基于两个 tag 之间的 PR/commit） |
 
-步骤 4、5 任意失败均阻止后续步骤执行。
+**关于测试**：当前测试依赖 Playwright 操控真实浏览器，CI 环境无法直接运行，暂不纳入 workflow。待测试改为可在 CI 中运行后，在步骤 5 后插入 `npm test`。
 
-**关于测试**：当前测试依赖 Playwright 操控真实浏览器，CI 环境无法直接运行，暂不纳入 workflow。待测试改为可在 CI 中运行后，在步骤 4 后插入 `npm test`。
-
-## 版本号同步
-
-Release tag（如 `v0.3.0`）是版本号的最终权威。使用 `npm pkg set` 直接写入 `package.json`，无论版本是否相同均幂等，不触发任何 npm lifecycle hooks。
-
-```bash
-VERSION=${GITHUB_REF_NAME#v}
-npm pkg set version="$VERSION"
-```
+**失败保护**：步骤 5（类型检查）或步骤 6（构建）失败时，`package.json` 和 `package-lock.json` 尚未修改，不会产生任何 commit 或 tag，仓库保持干净。
 
 ## Secrets 与鉴权
 
-| Secret | 说明 |
-|--------|------|
+| Secret/变量 | 说明 |
+|-------------|------|
 | `NPM_TOKEN` | npm Automation token，在仓库 Settings > Secrets and variables > Actions 中配置 |
+| `GITHUB_TOKEN` | GitHub 自动注入，无需手动配置 |
 
-发布步骤需通过 `env` 将 Secret 映射为 `NODE_AUTH_TOKEN`（`actions/setup-node` 配置 `registry-url` 后识别此变量名）：
+步骤 12（npm 发布）和步骤 13（创建 Release）分别注入鉴权：
 
 ```yaml
 - name: Publish to npm
   run: npm publish --access public --ignore-scripts
   env:
     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+- name: Create GitHub Release
+  run: gh release create v${{ steps.version.outputs.VERSION }} --generate-notes --title "v${{ steps.version.outputs.VERSION }}"
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## 发布操作步骤
 
-1. 开发完成后，确认代码已合并到 `main`
-2. 在 GitHub 仓库页面创建新 Release，tag 格式为 `v<major>.<minor>.<patch>`（如 `v0.3.0`）
-3. 填写 Release Notes，点击 **Publish release**
-4. GitHub Actions 自动触发，依次执行类型检查 → 构建 → 版本同步 → 发布
-5. 发布成功后可在 [npmjs.com](https://www.npmjs.com/package/@nodite/rednote-mcp) 确认新版本
+1. 确认代码已合并到 `main`，且 `main` 分支状态干净
+2. 进入仓库 **Actions** 页面 → 选择 **Publish to NPM** workflow → 点击 **Run workflow**
+3. 确认分支为 `main`，选择 `version_type`（patch / minor / major），点击确认
+4. Workflow 自动执行：类型检查 → 构建 → 版本更新 → push → npm 发布 → 创建 Release
+5. 发布完成后在 [npmjs.com](https://www.npmjs.com/package/@nodite/rednote-mcp) 和仓库 Releases 页面确认结果
