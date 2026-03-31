@@ -2,7 +2,9 @@
 
 [![English](https://img.shields.io/badge/English-Click-yellow)](README.en.md)
 [![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](../README.md)
-[![npm](https://img.shields.io/npm/v/rednote-mcp)](https://www.npmjs.com/package/rednote-mcp)
+[![npm](https://img.shields.io/npm/v/@nodite/rednote-mcp)](https://www.npmjs.com/package/@nodite/rednote-mcp)
+
+> This is an actively maintained fork of [iFurySt/RedNote-MCP](https://github.com/iFurySt/RedNote-MCP), kept in sync with upstream while providing up-to-date dependencies and bug fixes.
 
 A friendly tool to help you access and interact with Xiaohongshu (RedNote) content through Model Context Protocol.
 

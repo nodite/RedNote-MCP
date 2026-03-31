@@ -2,7 +2,9 @@
 
 [![English](https://img.shields.io/badge/English-Click-yellow)](docs/README.en.md)
 [![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](README.md)
-[![npm](https://img.shields.io/npm/v/rednote-mcp)](https://www.npmjs.com/package/rednote-mcp)
+[![npm](https://img.shields.io/npm/v/@nodite/rednote-mcp)](https://www.npmjs.com/package/@nodite/rednote-mcp)
+
+> 本项目是 [iFurySt/RedNote-MCP](https://github.com/iFurySt/RedNote-MCP) 的持续维护版本，保持与上游同步并提供最新的依赖更新和问题修复。
 
 小红书内容访问的MCP服务
 
