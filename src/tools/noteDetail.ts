@@ -33,7 +33,7 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   async function getContent() {
     // Browser-side copy — page.evaluate runs in a sandbox with no module scope.
     // IMPORTANT: keep in sync with the module-level chineseUnitStrToNumber above.
-    function ChineseUnitStrToNumber(str: string) {
+    function chineseUnitStrToNumber(str: string): number {
       if (str.includes('万')) {
         return Number(str.replace('万', '').trim()) * 10000
       } else {
@@ -83,8 +83,8 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
       imgs,
       videos,
       url: '',
-      likes: ChineseUnitStrToNumber(likesNumber),
-      comments: ChineseUnitStrToNumber(commentsNumber)
+      likes: chineseUnitStrToNumber(likesNumber),
+      comments: chineseUnitStrToNumber(commentsNumber)
     } as Note
   }
 
