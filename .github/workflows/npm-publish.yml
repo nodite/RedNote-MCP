@@ -54,11 +54,17 @@ jobs:
 
       - name: Commit version bump
         run: |
-          git diff --quiet && git diff --staged --quiet || \
+          if ! git diff --quiet || ! git diff --staged --quiet; then
             git commit -am "chore: bump version to v${{ steps.version.outputs.VERSION }}"
+          fi
 
       - name: Create tag
-        run: git tag v${{ steps.version.outputs.VERSION }}
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.VERSION }}" >/dev/null 2>&1; then
+            echo "Tag v${{ steps.version.outputs.VERSION }} already exists, aborting."
+            exit 1
+          fi
+          git tag "v${{ steps.version.outputs.VERSION }}"
 
       - name: Push commit and tag
         run: git push origin HEAD:${{ github.ref_name }} --tags
