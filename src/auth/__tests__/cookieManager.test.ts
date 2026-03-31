@@ -12,7 +12,7 @@ jest.mock('fs', () => {
     promises: {
       ...actualFs.promises,
       writeFile: jest.fn().mockResolvedValue(undefined),
-      readFile: jest.fn(),
+      readFile: jest.fn().mockResolvedValue('[]'),
       unlink: jest.fn().mockResolvedValue(undefined),
     },
   }
