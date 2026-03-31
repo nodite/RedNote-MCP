@@ -46,7 +46,9 @@ jobs:
         run: npm run build
 
       - name: Bump version
-        run: npm version ${{ inputs.version_type }} --no-git-tag-version
+        env:
+          VERSION_TYPE: ${{ inputs.version_type }}
+        run: npm version "$VERSION_TYPE" --no-git-tag-version
 
       - name: Read new version
         id: version
