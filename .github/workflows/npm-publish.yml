@@ -53,18 +53,22 @@ jobs:
         run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Commit version bump
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           if ! git diff --quiet || ! git diff --staged --quiet; then
-            git commit -am "chore: bump version to v${{ steps.version.outputs.VERSION }}"
+            git commit -am "chore: bump version to v${VERSION}"
           fi
 
       - name: Create tag
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          if git rev-parse "v${{ steps.version.outputs.VERSION }}" >/dev/null 2>&1; then
-            echo "Tag v${{ steps.version.outputs.VERSION }} already exists, aborting."
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists, aborting."
             exit 1
           fi
-          git tag "v${{ steps.version.outputs.VERSION }}"
+          git tag "v${VERSION}"
 
       - name: Push commit and tag
         run: git push origin HEAD:${{ github.ref_name }} --tags
@@ -75,9 +79,10 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        run: |
-          gh release create v${{ steps.version.outputs.VERSION }} \
-            --generate-notes \
-            --title "v${{ steps.version.outputs.VERSION }}"
         env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${VERSION}" \
+            --generate-notes \
+            --title "v${VERSION}"
