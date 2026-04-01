@@ -6,6 +6,7 @@ jest.mock('../../utils/logger')
 // jest.requireMock at runtime: real playwright types don't export mockPage
 const { mockPage } = jest.requireMock('playwright')
 
+// collects is intentionally absent — GetNoteDetail does not extract collects from the DOM
 const mockNoteData = {
   title: '测试标题',
   content: '测试内容',
@@ -41,10 +42,11 @@ describe('GetNoteDetail', () => {
       author: '测试作者',
       imgs: ['https://img1.jpg'],
       videos: [],
-      url: '',
+      url: '', // GetNoteDetail always returns '' — caller (getNoteContent) sets url after
       likes: 10000,
       comments: 500,
     })
+    expect(mockPage.evaluate).toHaveBeenCalledWith(expect.any(Function))
   })
 
   it('rejects when waitForSelector throws', async () => {
