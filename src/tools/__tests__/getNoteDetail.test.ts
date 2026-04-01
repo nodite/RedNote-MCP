@@ -1,4 +1,4 @@
-import { GetNoteDetail } from '../noteDetail'
+import { GetNoteDetail, NoteDetail } from '../noteDetail'
 
 jest.mock('playwright')
 jest.mock('../../utils/logger')
@@ -7,7 +7,7 @@ jest.mock('../../utils/logger')
 const { mockPage } = jest.requireMock('playwright')
 
 // collects is intentionally absent — GetNoteDetail does not extract collects from the DOM
-const mockNoteData = {
+const mockNoteData: NoteDetail = {
   title: '测试标题',
   content: '测试内容',
   tags: ['tag1', 'tag2'],
@@ -35,17 +35,7 @@ describe('GetNoteDetail', () => {
 
   it('returns object matching NoteDetail interface', async () => {
     const result = await GetNoteDetail(mockPage as any)
-    expect(result).toMatchObject({
-      title: '测试标题',
-      content: '测试内容',
-      tags: ['tag1', 'tag2'],
-      author: '测试作者',
-      imgs: ['https://img1.jpg'],
-      videos: [],
-      url: '', // GetNoteDetail always returns '' — caller (getNoteContent) sets url after
-      likes: 10000,
-      comments: 500,
-    })
+    expect(result).toEqual(mockNoteData)
     expect(mockPage.evaluate).toHaveBeenCalledWith(expect.any(Function))
   })
 
