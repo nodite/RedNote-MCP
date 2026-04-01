@@ -25,14 +25,11 @@ describe('GetNoteDetail', () => {
     mockPage.evaluate.mockResolvedValue(mockNoteData)
   })
 
-  it('waits for .note-container selector', async () => {
+  it('waits for selectors in order: .note-container then .media-container', async () => {
     await GetNoteDetail(mockPage as any)
-    expect(mockPage.waitForSelector).toHaveBeenCalledWith('.note-container')
-  })
-
-  it('waits for .media-container selector', async () => {
-    await GetNoteDetail(mockPage as any)
-    expect(mockPage.waitForSelector).toHaveBeenCalledWith('.media-container')
+    expect(mockPage.waitForSelector).toHaveBeenCalledTimes(2)
+    expect(mockPage.waitForSelector).toHaveBeenNthCalledWith(1, '.note-container')
+    expect(mockPage.waitForSelector).toHaveBeenNthCalledWith(2, '.media-container')
   })
 
   it('returns object matching NoteDetail interface', async () => {
@@ -44,13 +41,19 @@ describe('GetNoteDetail', () => {
       author: '测试作者',
       imgs: ['https://img1.jpg'],
       videos: [],
+      url: '',
       likes: 10000,
       comments: 500,
     })
   })
 
-  it('returns url as empty string (caller sets url after)', async () => {
-    const result = await GetNoteDetail(mockPage as any)
-    expect(result.url).toBe('')
+  it('rejects when waitForSelector throws', async () => {
+    mockPage.waitForSelector.mockRejectedValueOnce(new Error('Timeout'))
+    await expect(GetNoteDetail(mockPage as any)).rejects.toThrow('Timeout')
+  })
+
+  it('rejects when page.evaluate throws', async () => {
+    mockPage.evaluate.mockRejectedValueOnce(new Error('Article not found'))
+    await expect(GetNoteDetail(mockPage as any)).rejects.toThrow('Article not found')
   })
 })
