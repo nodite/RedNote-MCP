@@ -14,9 +14,9 @@ const mockNoteData: NoteDetail = {
   author: '测试作者',
   imgs: ['https://img1.jpg'],
   videos: [],
-  url: '',
-  likes: 10000,
-  comments: 500,
+  url: '', // GetNoteDetail always returns '' — caller (getNoteContent) sets url after
+  likes: 10000, // arbitrary numeric value; conversion logic tested in chineseUnit.test.ts
+  comments: 500, // arbitrary numeric value; conversion logic tested in chineseUnit.test.ts
 }
 
 describe('GetNoteDetail', () => {
@@ -42,6 +42,7 @@ describe('GetNoteDetail', () => {
   it('rejects when waitForSelector throws', async () => {
     mockPage.waitForSelector.mockRejectedValueOnce(new Error('Timeout'))
     await expect(GetNoteDetail(mockPage as any)).rejects.toThrow('Timeout')
+    expect(mockPage.evaluate).not.toHaveBeenCalled()
   })
 
   it('rejects when page.evaluate throws', async () => {
