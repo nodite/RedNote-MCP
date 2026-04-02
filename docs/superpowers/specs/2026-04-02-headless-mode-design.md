@@ -57,23 +57,30 @@ After:
   - Replace `this.authManager.getBrowser()` with `BrowserFactory.launch(this.config.headless)`
   - `BrowserFactory.newStealthContext(this.browser)` call remains unchanged
   - Cookie loading via `authManager.getCookies()` remains
-  - Login check remains; error message: `'Not logged in. Please run: rednote-mcp init'`
+  - Login check remains; error message intentionally changed from `'Not logged in'` to `'Not logged in. Please run: rednote-mcp init'` for better UX in headless mode
 - No changes to `searchNotes`, `getNoteContent`, `getNoteComments`, or `cleanup`
 
 ### `src/cli.ts`
 
-- Declare `--headless` on the top-level Commander program **before** `program.parse()`:
+The `--stdio` branch is checked via `process.argv.includes('--stdio')` **before** Commander is ever instantiated. Consistent with this existing pattern, `--headless` is detected the same way:
+
+```ts
+// existing pattern — no Commander involved
+if (process.argv.includes('--stdio')) {
+  const headless = process.argv.includes('--headless')
+  main(headless).catch(...)
+}
+```
+
+- `main()` accepts `headless: boolean`. In the current `cli.ts`, tool registrations (`server.tool(...)`) happen at module scope, not inside `main()`. As part of this change, tool registrations must move inside `main()` so they can close over the `headless` parameter:
   ```ts
-  program.option('--headless', 'Run browser in headless mode')
+  async function main(headless = false) {
+    // server.registerTool(...) calls move here
+    // inside each tool handler:
+    const tools = new RedNoteTools({ headless })
+  }
   ```
-- After `program.parse()`, read via `program.opts().headless`; the `--stdio` branch already uses `process.argv.includes('--stdio')` to detect MCP mode, so `--headless` is just an additional option read from the parsed opts
-- Pass to each tool instantiation inside the MCP server's tool handlers:
-  ```ts
-  const { headless } = program.opts()
-  // ... inside each tool handler:
-  const tools = new RedNoteTools({ headless: headless ?? false })
-  ```
-- `init` command: unaffected, no `--headless` option exposed there
+- Commander (`else` branch) and the `init` command are unaffected; `--headless` is not added to Commander options
 
 ### `src/browser/browserFactory.ts`
 
@@ -83,8 +90,9 @@ No changes. `launch(headless = false, options?)` already supports the parameter.
 
 ```
 rednote-mcp --headless --stdio
-  → program.parse() → { headless: true }
-  → MCP server starts
+  → process.argv.includes('--stdio') → true
+  → process.argv.includes('--headless') → true
+  → main(headless=true) → MCP server starts
 
 Tool call arrives (e.g. search_notes)
   → new RedNoteTools({ headless: true })
@@ -120,7 +128,7 @@ The same `initialize()` login check handles both cases. No additional branching 
 - Add:
   - `headless: false` → `BrowserFactory.launch` called with `false`
   - `headless: true` → `BrowserFactory.launch` called with `true`
-  - headless + not logged in → throws `'Not logged in'` and `BrowserFactory.launch` received `true`
+  - headless + not logged in → throws `'Not logged in. Please run: rednote-mcp init'` and `BrowserFactory.launch` received `true`
 
 ### `src/auth/__tests__/authManager.test.ts`
 
