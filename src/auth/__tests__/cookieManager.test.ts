@@ -1,5 +1,5 @@
 import { CookieManager } from '../cookieManager'
-import type { Cookie } from 'playwright'
+import type { Cookie } from 'rebrowser-playwright'
 
 jest.mock('../../utils/logger')
 

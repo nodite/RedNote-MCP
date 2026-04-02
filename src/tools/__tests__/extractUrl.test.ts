@@ -1,6 +1,6 @@
 import { RedNoteTools } from '../rednoteTools'
 
-jest.mock('playwright')
+jest.mock('rebrowser-playwright')
 jest.mock('../../auth/authManager')
 jest.mock('../../utils/logger')
 

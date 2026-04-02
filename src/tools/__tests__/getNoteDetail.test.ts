@@ -1,10 +1,10 @@
 import { GetNoteDetail, NoteDetail } from '../noteDetail'
 
-jest.mock('playwright')
+jest.mock('rebrowser-playwright')
 jest.mock('../../utils/logger')
 
 // jest.requireMock at runtime: real playwright types don't export mockPage
-const { mockPage } = jest.requireMock('playwright')
+const { mockPage } = jest.requireMock('rebrowser-playwright')
 
 // collects is intentionally absent — GetNoteDetail does not extract collects from the DOM
 const mockNoteData: NoteDetail = {

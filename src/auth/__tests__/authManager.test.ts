@@ -1,7 +1,13 @@
 import { AuthManager } from '../authManager'
-import type { Cookie } from 'playwright'
+import type { Cookie } from 'rebrowser-playwright'
 
-jest.mock('playwright')
+jest.mock('rebrowser-playwright')
+jest.mock('../../browser/browserFactory', () => ({
+  BrowserFactory: {
+    launch: jest.fn(),
+    newStealthContext: jest.fn(),
+  },
+}))
 jest.mock('../cookieManager')
 jest.mock('../../utils/logger', () => ({
   __esModule: true,
@@ -14,7 +20,7 @@ jest.mock('../../utils/logger', () => ({
 }))
 
 // jest.requireMock at runtime: real playwright types don't export mockPage/mockContext/mockBrowser
-const { mockPage, mockContext, mockBrowser } = jest.requireMock('playwright')
+const { mockPage, mockContext, mockBrowser } = jest.requireMock('rebrowser-playwright')
 
 jest.mock('fs', () => {
   const fsMock = {
@@ -54,15 +60,19 @@ describe('AuthManager', () => {
       saveCookies: jest.fn().mockResolvedValue(undefined),
       clearCookies: jest.fn().mockResolvedValue(undefined),
     }))
+    const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
+    BrowserFactory.launch.mockResolvedValue(mockBrowser)
+    BrowserFactory.newStealthContext.mockResolvedValue(mockContext)
+    mockContext.newPage.mockResolvedValue(mockPage)  // re-wire after clearAllMocks
   })
 
   describe('getBrowser', () => {
-    it('launches chromium in non-headless mode and returns browser', async () => {
+    it('launches browser via BrowserFactory and returns it', async () => {
       const auth = new AuthManager(COOKIE_PATH)
       const browser = await auth.getBrowser()
 
-      const { chromium } = jest.requireMock('playwright')
-      expect(chromium.launch).toHaveBeenCalledWith({ headless: false })
+      const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
+      expect(BrowserFactory.launch).toHaveBeenCalledWith()
       expect(browser).toBe(mockBrowser)
     })
   })
