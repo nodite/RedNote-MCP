@@ -3,7 +3,6 @@ import { Browser, BrowserContext, Page } from 'rebrowser-playwright'
 import logger from '../utils/logger'
 import { GetNoteDetail, NoteDetail } from './noteDetail'
 import { BrowserFactory } from '../browser/browserFactory'
-import { HumanMouse } from '../browser/humanMouse'
 
 export interface Note {
   title: string
@@ -143,12 +142,11 @@ export class RedNoteTools {
       // Process each note
       for (let i = 0; i < Math.min(noteItems.length, limit); i++) {
         logger.info(`Processing note ${i + 1}/${Math.min(noteItems.length, limit)}`)
-        const mouse = new HumanMouse(this.page)
         try {
           // Click on the note cover to open detail
           const coverHandle = await noteItems[i].$('a.cover.mask.ld')
           if (coverHandle) {
-            await mouse.click(coverHandle as any)
+            await coverHandle.click()
           } else {
             logger.warn(`No cover link found for note ${i + 1}, skipping`)
             continue
@@ -212,7 +210,7 @@ export class RedNoteTools {
           // Close note by clicking the close button
           logger.info('Closing note dialog')
           try {
-            await mouse.click('.close-circle')
+            await this.page.click('.close-circle')
             await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
           } catch {
             // .close-circle may be absent if dialog auto-closed; proceed to next note
@@ -221,7 +219,7 @@ export class RedNoteTools {
           logger.error(`Error processing note ${i + 1}:`, error)
           logger.info('Attempting to close note dialog after error')
           try {
-            await mouse.click('.close-circle')
+            await this.page.click('.close-circle')
             await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
           } catch (closeErr) {
             logger.warn(`Could not close note dialog after error: ${(closeErr as Error).message}`)
