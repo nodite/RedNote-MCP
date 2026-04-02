@@ -55,12 +55,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ifuryst/rednote-mcp.git"
+    "url": "git+https://github.com/nodite/rednote-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/ifuryst/rednote-mcp/issues"
+    "url": "https://github.com/nodite/rednote-mcp/issues"
   },
-  "homepage": "https://github.com/ifuryst/rednote-mcp#readme",
+  "homepage": "https://github.com/nodite/rednote-mcp#readme",
   "engines": {
     "node": ">=16"
   }
