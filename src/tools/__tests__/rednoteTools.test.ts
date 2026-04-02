@@ -37,15 +37,6 @@ jest.mock('../../browser/browserFactory', () => ({
   },
 }))
 
-jest.mock('../../browser/humanMouse', () => ({
-  HumanMouse: jest.fn().mockImplementation(() => ({
-    click: jest.fn().mockResolvedValue(undefined),
-    moveTo: jest.fn().mockResolvedValue(undefined),
-    randomMove: jest.fn(),
-  })),
-}))
-
-const { HumanMouse: MockHumanMouse } = jest.requireMock('../../browser/humanMouse')
 
 describe('RedNoteTools', () => {
   let tools: RedNoteTools
@@ -82,7 +73,8 @@ describe('RedNoteTools', () => {
     })
 
     it('returns notes array matching mock data', async () => {
-      const mockNoteElement = { $: jest.fn().mockResolvedValue({}) }
+      const mockCoverHandle = { click: jest.fn().mockResolvedValue(undefined) }
+      const mockNoteElement = { $: jest.fn().mockResolvedValue(mockCoverHandle) }
       mockPage.$$.mockResolvedValue([mockNoteElement, mockNoteElement])
       mockPage.evaluate
         .mockResolvedValueOnce(true) // initialize login check
@@ -102,13 +94,12 @@ describe('RedNoteTools', () => {
 
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({ title: '标题', url: 'https://example.com', author: '作者' })
-
-      const mouseInstance = MockHumanMouse.mock.results[0].value
-      expect(mouseInstance.click).toHaveBeenCalledWith(expect.anything())
+      expect(mockCoverHandle.click).toHaveBeenCalled()
     })
 
     it('respects limit parameter', async () => {
-      const fiveElements = Array.from({ length: 5 }, () => ({ $: jest.fn().mockResolvedValue({}) }))
+      const mockCoverHandle = { click: jest.fn().mockResolvedValue(undefined) }
+      const fiveElements = Array.from({ length: 5 }, () => ({ $: jest.fn().mockResolvedValue(mockCoverHandle) }))
       mockPage.$$.mockResolvedValue(fiveElements)
       mockPage.evaluate
         .mockResolvedValueOnce(true) // initialize login check
