@@ -44,12 +44,6 @@ export class AuthManager {
     this.cookieManager = new CookieManager(cookiePath)
   }
 
-  async getBrowser(): Promise<Browser> {
-    logger.info('Launching browser')
-    this.browser = await BrowserFactory.launch()
-    return this.browser
-  }
-
   async getCookies(): Promise<Cookie[]> {
     logger.info('Loading cookies')
     return await this.cookieManager.loadCookies()

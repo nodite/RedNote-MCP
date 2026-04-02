@@ -66,17 +66,6 @@ describe('AuthManager', () => {
     mockContext.newPage.mockResolvedValue(mockPage)  // re-wire after clearAllMocks
   })
 
-  describe('getBrowser', () => {
-    it('launches browser via BrowserFactory and returns it', async () => {
-      const auth = new AuthManager(COOKIE_PATH)
-      const browser = await auth.getBrowser()
-
-      const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
-      expect(BrowserFactory.launch).toHaveBeenCalledWith()
-      expect(browser).toBe(mockBrowser)
-    })
-  })
-
   describe('getCookies', () => {
     it('returns cookies from CookieManager.loadCookies', async () => {
       const mockLoad = jest.fn().mockResolvedValue(sampleCookies)
