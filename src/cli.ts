@@ -17,137 +17,123 @@ const description =
   'A friendly tool to help you access and interact with Xiaohongshu (RedNote) content through Model Context Protocol.'
 const version = '0.2.3'
 
-// Create server instance
-const server = new McpServer({
-  name,
-  version
-})
-
-// Register tools
-server.registerTool(
-  'search_notes',
-  {
-    title: 'Search Notes',
-    description: '根据关键词搜索笔记',
-    inputSchema: z.object({
-      keywords: z.string().describe('搜索关键词'),
-      limit: z.number().optional().describe('返回结果数量限制')
-    }),
-    annotations: { readOnlyHint: true, openWorldHint: true }
-  },
-  async ({ keywords, limit = 10 }) => {
-    logger.info(`Searching notes with keywords: ${keywords}, limit: ${limit}`)
-    try {
-      const tools = new RedNoteTools()
-      const notes = await tools.searchNotes(keywords, limit)
-      logger.info(`Found ${notes.length} notes`)
-      return {
-        content: notes.map((note) => ({
-          type: 'text' as const,
-          text: `标题: ${note.title}\n作者: ${note.author}\n内容: ${note.content}\n点赞: ${note.likes}\n评论: ${note.comments}\n链接: ${note.url}\n---`
-        }))
-      }
-    } catch (error) {
-      logger.error('Error searching notes:', error)
-      throw error
-    }
-  }
-)
-
-server.registerTool(
-  'get_note_content',
-  {
-    title: 'Get Note Content',
-    description: '获取笔记内容',
-    inputSchema: z.object({
-      url: z.string().describe('笔记 URL')
-    }),
-    annotations: { readOnlyHint: true, openWorldHint: true }
-  },
-  async ({ url }) => {
-    logger.info(`Getting note content for URL: ${url}`)
-    try {
-      const tools = new RedNoteTools()
-      const note = await tools.getNoteContent(url)
-      logger.info(`Successfully retrieved note: ${note.title}`)
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify(note)
-          }
-        ]
-      }
-    } catch (error) {
-      logger.error('Error getting note content:', error)
-      throw error
-    }
-  }
-)
-
-server.registerTool(
-  'get_note_comments',
-  {
-    title: 'Get Note Comments',
-    description: '获取笔记评论',
-    inputSchema: z.object({
-      url: z.string().describe('笔记 URL')
-    }),
-    annotations: { readOnlyHint: true, openWorldHint: true }
-  },
-  async ({ url }) => {
-    logger.info(`Getting comments for URL: ${url}`)
-    try {
-      const tools = new RedNoteTools()
-      const comments = await tools.getNoteComments(url)
-      logger.info(`Found ${comments.length} comments`)
-      return {
-        content: comments.map((comment) => ({
-          type: 'text' as const,
-          text: `作者: ${comment.author}\n内容: ${comment.content}\n点赞: ${comment.likes}\n时间: ${comment.time}\n---`
-        }))
-      }
-    } catch (error) {
-      logger.error('Error getting note comments:', error)
-      throw error
-    }
-  }
-)
-
-// Add login tool
-server.registerTool(
-  'login',
-  {
-    title: 'Login',
-    description: '登录小红书账号',
-    annotations: { openWorldHint: true }
-  },
-  async () => {
-    logger.info('Starting login process')
-    const authManager = new AuthManager()
-    try {
-      await authManager.login()
-      logger.info('Login successful')
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: '登录成功！Cookie 已保存。'
-          }
-        ]
-      }
-    } catch (error) {
-      logger.error('Login failed:', error)
-      throw error
-    } finally {
-      await authManager.cleanup()
-    }
-  }
-)
-
 // Start the server
-async function main() {
+async function main(headless = false) {
   logger.info('Starting RedNote MCP Server')
+
+  // Create server instance
+  const server = new McpServer({ name, version })
+
+  // Register tools
+  server.registerTool(
+    'search_notes',
+    {
+      title: 'Search Notes',
+      description: '根据关键词搜索笔记',
+      inputSchema: z.object({
+        keywords: z.string().describe('搜索关键词'),
+        limit: z.number().optional().describe('返回结果数量限制')
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: true }
+    },
+    async ({ keywords, limit = 10 }) => {
+      logger.info(`Searching notes with keywords: ${keywords}, limit: ${limit}`)
+      try {
+        const tools = new RedNoteTools({ headless })
+        const notes = await tools.searchNotes(keywords, limit)
+        logger.info(`Found ${notes.length} notes`)
+        return {
+          content: notes.map((note) => ({
+            type: 'text' as const,
+            text: `标题: ${note.title}\n作者: ${note.author}\n内容: ${note.content}\n点赞: ${note.likes}\n评论: ${note.comments}\n链接: ${note.url}\n---`
+          }))
+        }
+      } catch (error) {
+        logger.error('Error searching notes:', error)
+        throw error
+      }
+    }
+  )
+
+  server.registerTool(
+    'get_note_content',
+    {
+      title: 'Get Note Content',
+      description: '获取笔记内容',
+      inputSchema: z.object({
+        url: z.string().describe('笔记 URL')
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: true }
+    },
+    async ({ url }) => {
+      logger.info(`Getting note content for URL: ${url}`)
+      try {
+        const tools = new RedNoteTools({ headless })
+        const note = await tools.getNoteContent(url)
+        logger.info(`Successfully retrieved note: ${note.title}`)
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(note) }]
+        }
+      } catch (error) {
+        logger.error('Error getting note content:', error)
+        throw error
+      }
+    }
+  )
+
+  server.registerTool(
+    'get_note_comments',
+    {
+      title: 'Get Note Comments',
+      description: '获取笔记评论',
+      inputSchema: z.object({
+        url: z.string().describe('笔记 URL')
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: true }
+    },
+    async ({ url }) => {
+      logger.info(`Getting comments for URL: ${url}`)
+      try {
+        const tools = new RedNoteTools({ headless })
+        const comments = await tools.getNoteComments(url)
+        logger.info(`Found ${comments.length} comments`)
+        return {
+          content: comments.map((comment) => ({
+            type: 'text' as const,
+            text: `作者: ${comment.author}\n内容: ${comment.content}\n点赞: ${comment.likes}\n时间: ${comment.time}\n---`
+          }))
+        }
+      } catch (error) {
+        logger.error('Error getting note comments:', error)
+        throw error
+      }
+    }
+  )
+
+  server.registerTool(
+    'login',
+    {
+      title: 'Login',
+      description: '登录小红书账号',
+      annotations: { openWorldHint: true }
+    },
+    async () => {
+      logger.info('Starting login process')
+      const authManager = new AuthManager()
+      try {
+        await authManager.login()
+        logger.info('Login successful')
+        return {
+          content: [{ type: 'text' as const, text: '登录成功！Cookie 已保存。' }]
+        }
+      } catch (error) {
+        logger.error('Login failed:', error)
+        throw error
+      } finally {
+        await authManager.cleanup()
+      }
+    }
+  )
 
   // Start stdio logging
   const stopLogging = createStdioLogger(`${LOGS_DIR}/stdio.log`)
@@ -156,7 +142,6 @@ async function main() {
   await server.connect(transport)
   logger.info('RedNote MCP Server running on stdio')
 
-  // Cleanup on process exit
   process.on('exit', () => {
     stopLogging()
   })
@@ -164,7 +149,8 @@ async function main() {
 
 // 检查是否在 stdio 模式下运行
 if (process.argv.includes('--stdio')) {
-  main().catch((error) => {
+  const headless = process.argv.includes('--headless')
+  main(headless).catch((error) => {
     logger.error('Fatal error in main():', error)
     process.exit(1)
   })
