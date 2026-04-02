@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {Cookie} from 'playwright';
+import {Cookie} from 'rebrowser-playwright';
 import logger from '../utils/logger';
 
 export class CookieManager {
