@@ -84,25 +84,29 @@ export class AuthManager {
         // Navigate to explore page
         logger.info('Navigating to explore page')
         await this.page.goto('https://www.xiaohongshu.com/explore', {
-          waitUntil: 'load',
+          waitUntil: 'networkidle',
           timeout: timeoutMs
         })
 
         // Check if already logged in
-        const userSidebar = await this.page.$('.user.side-bar-component .channel')
-        if (userSidebar) {
-          const isLoggedIn = await this.page.evaluate(() => {
-            const sidebarUser = document.querySelector('.user.side-bar-component .channel')
-            return sidebarUser?.textContent?.trim() === '我'
-          })
-
-          if (isLoggedIn) {
-            logger.info('Already logged in')
-            // Already logged in, save cookies and return
-            const newCookies = await this.context.cookies()
-            await this.cookieManager.saveCookies(newCookies)
-            return
+        let isAlreadyLoggedIn = false
+        try {
+          const userSidebar = await this.page.$('.user.side-bar-component .channel')
+          if (userSidebar) {
+            isAlreadyLoggedIn = await this.page.evaluate(() => {
+              const sidebarUser = document.querySelector('.user.side-bar-component .channel')
+              return sidebarUser?.textContent?.trim() === '我'
+            })
           }
+        } catch (checkErr) {
+          logger.warn(`Login check failed, assuming not logged in: ${(checkErr as Error).message}`)
+        }
+
+        if (isAlreadyLoggedIn) {
+          logger.info('Already logged in')
+          const newCookies = await this.context!.cookies()
+          await this.cookieManager.saveCookies(newCookies)
+          return
         }
 
         logger.info('Waiting for login dialog')

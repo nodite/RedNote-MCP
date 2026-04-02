@@ -29,6 +29,10 @@ export class CookieManager {
     }
     logger.info(`Loading cookies from ${this.cookiePath}`);
     const data = await fs.promises.readFile(this.cookiePath, 'utf-8');
+    if (!data.trim()) {
+      logger.info('Cookies file is empty, returning empty array');
+      return [];
+    }
     const cookies = JSON.parse(data);
     logger.info(`Loaded ${cookies.length} cookies`);
     return cookies;
