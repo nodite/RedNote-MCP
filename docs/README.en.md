@@ -3,7 +3,7 @@
 [![English](https://img.shields.io/badge/English-Current-yellow)](README.en.md)
 [![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](../README.md)
 [![npm](https://img.shields.io/npm/v/@nodite/rednote-mcp)](https://www.npmjs.com/package/@nodite/rednote-mcp)
-[![License](https://img.shields.io/github/license/ifuryst/rednote-mcp)](../LICENSE)
+[![License](https://img.shields.io/github/license/nodite/rednote-mcp)](../LICENSE)
 
 Access Xiaohongshu (RedNote) content through the Model Context Protocol. Built on rebrowser-playwright + playwright-extra stealth to stay undetected, with persistent cookie-based login.
 
@@ -129,7 +129,7 @@ Once configured, your MCP client can call these tools:
 ## Build from Source
 
 ```bash
-git clone https://github.com/ifuryst/rednote-mcp.git
+git clone https://github.com/nodite/rednote-mcp.git
 cd rednote-mcp
 
 npm install

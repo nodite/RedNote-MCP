@@ -3,7 +3,7 @@
 [![简体中文](https://img.shields.io/badge/简体中文-当前-orange)](README.md)
 [![English](https://img.shields.io/badge/English-Click-yellow)](docs/README.en.md)
 [![npm](https://img.shields.io/npm/v/@nodite/rednote-mcp)](https://www.npmjs.com/package/@nodite/rednote-mcp)
-[![License](https://img.shields.io/github/license/ifuryst/rednote-mcp)](LICENSE)
+[![License](https://img.shields.io/github/license/nodite/rednote-mcp)](LICENSE)
 
 通过 MCP 协议访问小红书内容。集成 rebrowser-playwright + playwright-extra stealth 反检测方案，支持登录态持久化。
 
@@ -129,7 +129,7 @@ rednote-mcp init
 ## 从源码运行
 
 ```bash
-git clone https://github.com/ifuryst/rednote-mcp.git
+git clone https://github.com/nodite/rednote-mcp.git
 cd rednote-mcp
 
 npm install

@@ -37,7 +37,7 @@ npx rednote-mcp -- pack-logs
 <!--   - System environment details -->
 <!-- - We do NOT collect or include any cookie information -->
 <!-- - If you are concerned about privacy, you can: -->
-<!--   - Send the log file directly to Leo (ifuryst@gmail.com) instead of attaching it here -->
+<!--   - Send the log file directly to Oscaner (oscaner1997@163.com) instead of attaching it here -->
 <!--   - Or choose not to attach the logs and describe the issue in detail -->
 
 <!-- 4. Attach the generated `rednote-logs.zip` file to this issue (if you're comfortable doing so) -->
