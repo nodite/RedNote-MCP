@@ -37,6 +37,7 @@ export class RedNoteTools {
 
   async initialize(): Promise<void> {
     logger.info('Initializing browser and page')
+    // BrowserFactory.launch returns Promise<Browser> and throws on failure — no null check needed
     this.browser = await BrowserFactory.launch(this.config.headless)
 
     try {
