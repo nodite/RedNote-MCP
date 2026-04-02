@@ -161,6 +161,7 @@ export class AuthManager {
     logger.info('Cleaning up browser resources')
     if (this.page) await this.page.close()
     if (this.context) await this.context.close()
+    if (this.browser) await this.browser.close()
     this.page = null
     this.context = null
     this.browser = null
