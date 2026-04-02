@@ -1,6 +1,6 @@
 import { Note } from './rednoteTools'
 import logger from '../utils/logger'
-import { Page } from 'playwright'
+import { Page } from 'rebrowser-playwright'
 
 export interface NoteDetail {
   title: string
