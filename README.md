@@ -1,169 +1,192 @@
 # RedNote MCP
 
+[![简体中文](https://img.shields.io/badge/简体中文-当前-orange)](README.md)
 [![English](https://img.shields.io/badge/English-Click-yellow)](docs/README.en.md)
-[![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](README.md)
 [![npm](https://img.shields.io/npm/v/@nodite/rednote-mcp)](https://www.npmjs.com/package/@nodite/rednote-mcp)
+[![License](https://img.shields.io/github/license/ifuryst/rednote-mcp)](LICENSE)
 
-> 本项目是 [iFurySt/RedNote-MCP](https://github.com/iFurySt/RedNote-MCP) 的持续维护版本，保持与上游同步并提供最新的依赖更新和问题修复。
+通过 MCP 协议访问小红书内容。集成 rebrowser-playwright + playwright-extra stealth 反检测方案，支持登录态持久化。
 
-小红书内容访问的MCP服务
+> 本项目是 [iFurySt/RedNote-MCP](https://github.com/iFurySt/RedNote-MCP) 的持续维护版本。
 
 https://github.com/user-attachments/assets/06b2c67f-d9ed-4a30-8f1d-9743f3edaa3a
 
-## 快速开始
+---
 
-开始前确保安装了 [playwright](https://github.com/microsoft/playwright) 环境：
+## 功能
+
+| 功能 | 状态 |
+|------|------|
+| 关键词搜索笔记 | ✅ |
+| 获取笔记详情（标题、正文、图片、视频、标签、点赞数） | ✅ |
+| 获取笔记评论 | ✅ |
+| Cookie 持久化登录 | ✅ |
+| 反检测浏览器（rebrowser + stealth plugin + 仿人鼠标） | ✅ |
+
+---
+
+## 安装
+
+### 前置要求
 
 ```bash
-npx playwright install
+# 安装 @nodite/rednote-mcp
+npm install -g @nodite/rednote-mcp
+
+# 安装匹配版本的 Playwright（rebrowser-playwright 1.52 需要 chromium-1169）
+npm install -g playwright@1.52.0
+npx playwright install chromium
 ```
 
-### NPM 全局安装
+### 初始化登录
 
 ```bash
-# 全局安装
-npm install -g rednote-mcp
-
-# 初始化登录，会自动记录cookie到 ~/.mcp/rednote/cookies.json
+# 会自动打开浏览器，扫码或账号密码登录
+# Cookie 保存至 ~/.mcp/rednote/cookies.json
 rednote-mcp init
 ```
 
-### 从源码安装
+> 默认等待时间 60 秒，可通过参数调整：`rednote-mcp init 120`
+
+---
+
+## 配置 MCP 客户端
+
+### Claude Desktop
+
+编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "rednote-mcp",
+      "args": ["--stdio"]
+    }
+  }
+}
+```
+
+### Cursor
+
+编辑 `.cursor/mcp.json` 或 Cursor 设置中的 MCP 配置：
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "rednote-mcp",
+      "args": ["--stdio"]
+    }
+  }
+}
+```
+
+### VS Code (Copilot)
+
+编辑 `.vscode/mcp.json`：
+
+```json
+{
+  "servers": {
+    "rednote": {
+      "type": "stdio",
+      "command": "rednote-mcp",
+      "args": ["--stdio"]
+    }
+  }
+}
+```
+
+### 通用（npx，无需全局安装）
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "npx",
+      "args": ["-y", "@nodite/rednote-mcp", "--stdio"]
+    }
+  }
+}
+```
+
+---
+
+## 可用工具
+
+配置完成后，MCP 客户端可调用以下工具：
+
+| 工具名 | 说明 | 参数 |
+|--------|------|------|
+| `search_notes` | 关键词搜索笔记 | `keywords`（必填），`limit`（可选，默认 10） |
+| `get_note_content` | 获取笔记详情 | `url`（笔记链接） |
+| `get_note_comments` | 获取笔记评论 | `url`（笔记链接） |
+| `login` | 在 MCP 客户端内触发登录 | 无 |
+
+---
+
+## 从源码运行
 
 ```bash
-# 克隆项目
 git clone https://github.com/ifuryst/rednote-mcp.git
 cd rednote-mcp
 
-# 安装依赖
 npm install
 
-# 全局安装（可选，方便命令行调用）
-npm install -g .
+# 安装匹配版本的 Playwright
+npm install playwright@1.52.0 --save-dev
+npx playwright install chromium
 
-# 或者直接运行，如初始化登录
+# 初始化登录
 npm run dev -- init
+
+# 启动 MCP Server（stdio 模式）
+npm run dev -- --stdio
 ```
 
-## 功能特性
+---
 
-- 认证管理（支持 Cookie 持久化）
-- 关键词搜索笔记
-- 命令行初始化工具
-- 通过 URL 访问笔记内容
-- [ ] 通过 URL 访问评论内容
-
-## 使用说明
-
-### 1. 初始化登录
-
-首次使用需要先进行登录初始化：
+## 开发
 
 ```bash
-rednote-mcp init
-# 或者直接从源码run
-npm run dev -- init
-# 或者mcp-client里选择login
-```
+# 类型检查
+npx tsc --noEmit
 
-执行此命令后：
+# 测试
+npm test
 
-1. 会自动打开浏览器窗口
-2. 跳转到小红书登录页面
-3. 请手动完成登录操作
-4. 登录成功后会自动保存 Cookie 到 `~/.mcp/rednote/cookies.json` 文件
-
-### 2. 在 Cursor 中配置 MCP Server
-
-在 Cursor 的 settings.json 中添加以下配置：
-
-```json
-{
-  "mcpServers": {
-    "RedNote MCP": {
-      "command": "rednote-mcp",
-      "args": [
-        "--stdio"
-      ]
-    }
-  }
-}
-```
-
-或者使用 npx 方式：
-
-```json
-{
-  "mcpServers": {
-    "RedNote MCP": {
-      "command": "npx",
-      "args": [
-        "rednote-mcp",
-        "--stdio"
-      ]
-    }
-  }
-}
-```
-
-配置说明：
-
-- `command`: 可以是全局安装后的 `rednote-mcp` 命令，或使用 `npx` 直接运行
-- `args`: 必须包含 `--stdio` 参数以支持 Cursor 的通信方式
-
-## 开发指南
-
-### 环境要求
-
-- Node.js >= 16
-- npm >= 7
-
-### 开发流程
-
-```bash
-# 安装依赖
-npm install
-
-# 构建项目
+# 构建
 npm run build
 
-# 开发模式运行
-npm run dev
+# MCP Inspector 调试
+npx @modelcontextprotocol/inspector npx @nodite/rednote-mcp --stdio
 
-# 运行测试
-npm test
+# 打包日志
+rednote-mcp pack-logs
+
+# 打开日志目录
+rednote-mcp open-logs
 ```
 
-### 使用 MCP Inspector 进行调试
-
-MCP Inspector 是一个用于调试 MCP 服务器的工具，可以帮助开发者检查和验证 MCP 服务器的行为。使用以下命令启动：
-
-```bash
-npx @modelcontextprotocol/inspector npx rednote-mcp --stdio
-```
-
-这个命令会：
-
-1. 启动 MCP Inspector 工具
-2. 通过 Inspector 运行 rednote-mcp 服务
-3. 提供一个交互式界面来检查请求和响应
-4. 帮助调试和验证 MCP 协议的实现
+---
 
 ## 注意事项
 
-1. 首次使用必须执行 `init` 命令进行登录
-2. Cookie 文件包含敏感信息，避免泄露
-3. 建议定期更新 Cookie，避免失效
-4. 确保已正确安装 Node.js 环境
+- `~/.mcp/rednote/cookies.json` 包含登录凭证，勿提交至版本控制
+- Cookie 过期后重新执行 `rednote-mcp init` 即可
+- rebrowser-playwright 需要与 Playwright 版本严格匹配（当前：1.52.0 / chromium-1169）
 
-## 贡献指南
+---
+
+## 贡献
 
 1. Fork 本仓库
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的改动 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
+2. 创建特性分支 `git checkout -b feature/your-feature`
+3. 提交改动并开 PR
+
+---
 
 ## 许可证
 
-MIT License - 详见 [LICENSE](LICENSE) 文件 
+[MIT](LICENSE)
