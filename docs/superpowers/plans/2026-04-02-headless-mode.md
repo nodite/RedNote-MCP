@@ -92,7 +92,7 @@ Expected: the three new tests fail with "constructor requires 0 arguments" or si
 
 - [ ] **Step 3: Update `src/tools/rednoteTools.ts`**
 
-Replace lines 25–41 (class declaration through end of `constructor`):
+Replace lines 25–34 (class declaration through end of `constructor`):
 
 ```typescript
 export class RedNoteTools {
@@ -151,7 +151,7 @@ git commit -m "feat: add headless config to RedNoteTools, launch browser directl
 
 - [ ] **Step 1: Remove `getBrowser` test block from `authManager.test.ts`**
 
-Delete lines 67–75 (the entire `describe('getBrowser', ...)` block):
+Delete lines 69–78 (the entire `describe('getBrowser', ...)` block):
 
 ```typescript
   // DELETE this entire block:
@@ -392,7 +392,7 @@ git commit -m "feat: add --headless flag to MCP server stdio mode"
 
 - [ ] **Step 1: Add `--headless` to the MCP client config section in `README.md`**
 
-In the "配置 MCP 客户端" section, add a headless example after the existing Claude Desktop config block:
+In the "配置 MCP 客户端" section, add a headless example after all four client config blocks (Claude Desktop / Cursor / VS Code / npx), before the `---` divider:
 
 ```markdown
 > `--headless` 参数可让浏览器在后台无界面运行（有 cookie 后推荐开启）：
@@ -410,7 +410,7 @@ In the "配置 MCP 客户端" section, add a headless example after the existing
 
 - [ ] **Step 2: Add the same note to `docs/README.en.md`**
 
-In the "MCP Client Configuration" section, add after the Claude Desktop config block:
+In the "MCP Client Configuration" section, add after all four client config blocks (Claude Desktop / Cursor / VS Code / npx), before the `---` divider:
 
 ```markdown
 > Add `--headless` to run the browser in the background (recommended once you have cookies):
