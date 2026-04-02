@@ -140,9 +140,37 @@ npx playwright install chromium
 
 # Login setup
 npm run dev -- init
+```
 
-# Start MCP server in stdio mode
-npm run dev -- --stdio
+After logging in, point your MCP client at the built output:
+
+```bash
+# Build first
+npm run build
+```
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "node",
+      "args": ["/path/to/rednote-mcp/dist/cli.js", "--stdio"]
+    }
+  }
+}
+```
+
+Or skip the build and run TypeScript directly with `ts-node`:
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "npx",
+      "args": ["ts-node", "/path/to/rednote-mcp/src/cli.ts", "--stdio"]
+    }
+  }
+}
 ```
 
 ---

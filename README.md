@@ -140,9 +140,37 @@ npx playwright install chromium
 
 # 初始化登录
 npm run dev -- init
+```
 
-# 启动 MCP Server（stdio 模式）
-npm run dev -- --stdio
+登录成功后，在 MCP 客户端配置中将 `command` 改为 `node`，`args` 指向构建产物：
+
+```bash
+# 先构建
+npm run build
+```
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "node",
+      "args": ["/path/to/rednote-mcp/dist/cli.js", "--stdio"]
+    }
+  }
+}
+```
+
+或者不构建，直接用 `ts-node` 运行源码：
+
+```json
+{
+  "mcpServers": {
+    "rednote": {
+      "command": "npx",
+      "args": ["ts-node", "/path/to/rednote-mcp/src/cli.ts", "--stdio"]
+    }
+  }
+}
 ```
 
 ---
