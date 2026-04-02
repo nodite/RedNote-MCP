@@ -146,7 +146,13 @@ export class RedNoteTools {
         const mouse = new HumanMouse(this.page)
         try {
           // Click on the note cover to open detail
-          await mouse.click('a.cover.mask.ld')
+          const coverHandle = await noteItems[i].$('a.cover.mask.ld')
+          if (coverHandle) {
+            await mouse.click(coverHandle as any)
+          } else {
+            logger.warn(`No cover link found for note ${i + 1}, skipping`)
+            continue
+          }
 
           // Wait for the note page to load
           logger.info('Waiting for note page to load')
@@ -205,16 +211,20 @@ export class RedNoteTools {
 
           // Close note by clicking the close button
           logger.info('Closing note dialog')
-          await mouse.click('.close-circle')
-          await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
+          try {
+            await mouse.click('.close-circle')
+            await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
+          } catch {
+            // .close-circle may be absent if dialog auto-closed; proceed to next note
+          }
         } catch (error) {
           logger.error(`Error processing note ${i + 1}:`, error)
           logger.info('Attempting to close note dialog after error')
           try {
             await mouse.click('.close-circle')
             await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
-          } catch {
-            // .close-circle not found; continue to next note
+          } catch (closeErr) {
+            logger.warn(`Could not close note dialog after error: ${(closeErr as Error).message}`)
           }
         } finally {
           // Add random delay before next note
