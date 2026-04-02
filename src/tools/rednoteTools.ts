@@ -1,7 +1,9 @@
 import { AuthManager } from '../auth/authManager'
-import { Browser, Page } from 'playwright'
+import { Browser, BrowserContext, Page } from 'rebrowser-playwright'
 import logger from '../utils/logger'
 import { GetNoteDetail, NoteDetail } from './noteDetail'
+import { BrowserFactory } from '../browser/browserFactory'
+import { HumanMouse } from '../browser/humanMouse'
 
 export interface Note {
   title: string
@@ -24,6 +26,7 @@ export interface Comment {
 export class RedNoteTools {
   private authManager: AuthManager
   private browser: Browser | null = null
+  private context: BrowserContext | null = null
   private page: Page | null = null
 
   constructor() {
@@ -39,13 +42,14 @@ export class RedNoteTools {
     }
     
     try {
-      this.page = await this.browser.newPage()
+      this.context = await BrowserFactory.newStealthContext(this.browser)
+      this.page = await this.context.newPage()
       
       // Load cookies if available
       const cookies = await this.authManager.getCookies()
       if (cookies.length > 0) {
         logger.info(`Loading ${cookies.length} cookies`)
-        await this.page.context().addCookies(cookies)
+        await this.context.addCookies(cookies)
       }
 
       // Check login status
@@ -76,7 +80,12 @@ export class RedNoteTools {
         await this.page.close().catch(err => logger.error('Error closing page:', err))
         this.page = null
       }
-      
+
+      if (this.context) {
+        await this.context.close().catch(err => logger.error('Error closing context:', err))
+        this.context = null
+      }
+
       if (this.browser) {
         await this.browser.close().catch(err => logger.error('Error closing browser:', err))
         this.browser = null
@@ -85,6 +94,7 @@ export class RedNoteTools {
       logger.error('Error during cleanup:', error)
     } finally {
       this.page = null
+      this.context = null
       this.browser = null
     }
   }
@@ -133,9 +143,10 @@ export class RedNoteTools {
       // Process each note
       for (let i = 0; i < Math.min(noteItems.length, limit); i++) {
         logger.info(`Processing note ${i + 1}/${Math.min(noteItems.length, limit)}`)
+        const mouse = new HumanMouse(this.page)
         try {
           // Click on the note cover to open detail
-          await noteItems[i].$eval('a.cover.mask.ld', (el: HTMLElement) => el.click())
+          await mouse.click('a.cover.mask.ld')
 
           // Wait for the note page to load
           logger.info('Waiting for note page to load')
@@ -193,29 +204,17 @@ export class RedNoteTools {
           await this.randomDelay(0.5, 1)
 
           // Close note by clicking the close button
-          const closeButton = await this.page.$('.close-circle')
-          if (closeButton) {
-            logger.info('Closing note dialog')
-            await closeButton.click()
-
-            // Wait for note dialog to disappear
-            await this.page.waitForSelector('#noteContainer', {
-              state: 'detached',
-              timeout: 30000
-            })
-          }
+          logger.info('Closing note dialog')
+          await mouse.click('.close-circle')
+          await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
         } catch (error) {
           logger.error(`Error processing note ${i + 1}:`, error)
-          const closeButton = await this.page.$('.close-circle')
-          if (closeButton) {
-            logger.info('Attempting to close note dialog after error')
-            await closeButton.click()
-
-            // Wait for note dialog to disappear
-            await this.page.waitForSelector('#noteContainer', {
-              state: 'detached',
-              timeout: 30000
-            })
+          logger.info('Attempting to close note dialog after error')
+          try {
+            await mouse.click('.close-circle')
+            await this.page.waitForSelector('#noteContainer', { state: 'detached', timeout: 30000 })
+          } catch {
+            // .close-circle not found; continue to next note
           }
         } finally {
           // Add random delay before next note
