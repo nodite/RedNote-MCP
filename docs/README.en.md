@@ -111,6 +111,18 @@ Edit `.vscode/mcp.json`:
 }
 ```
 
+> Add `--headless` to run the browser in the background (recommended once you have cookies):
+> ```json
+> {
+>   "mcpServers": {
+>     "rednote": {
+>       "command": "rednote-mcp",
+>       "args": ["--headless", "--stdio"]
+>     }
+>   }
+> }
+> ```
+
 ---
 
 ## Available Tools

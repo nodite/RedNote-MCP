@@ -111,6 +111,18 @@ rednote-mcp init
 }
 ```
 
+> `--headless` 参数可让浏览器在后台无界面运行（有 cookie 后推荐开启）：
+> ```json
+> {
+>   "mcpServers": {
+>     "rednote": {
+>       "command": "rednote-mcp",
+>       "args": ["--headless", "--stdio"]
+>     }
+>   }
+> }
+> ```
+
 ---
 
 ## 可用工具
