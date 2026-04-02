@@ -56,7 +56,7 @@ export class AuthManager {
   }
 
   async login(options?: {timeout?: number}): Promise<void> {
-    const timeoutSeconds = options?.timeout || 10
+    const timeoutSeconds = options?.timeout || 60
     logger.info(`Starting login process with timeout: ${timeoutSeconds}s`)
     const timeoutMs = timeoutSeconds * 1000
     this.browser = await BrowserFactory.launch(false, { timeout: timeoutMs })
@@ -84,7 +84,7 @@ export class AuthManager {
         // Navigate to explore page
         logger.info('Navigating to explore page')
         await this.page.goto('https://www.xiaohongshu.com/explore', {
-          waitUntil: 'domcontentloaded',
+          waitUntil: 'load',
           timeout: timeoutMs
         })
 

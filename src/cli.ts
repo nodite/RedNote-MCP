@@ -177,7 +177,7 @@ if (process.argv.includes('--stdio')) {
   program
     .command('init [timeout]')
     .description('Initialize and login to RedNote')
-    .argument('[timeout]', 'Login timeout in seconds', (value: string) => parseInt(value, 10), 10)
+    .argument('[timeout]', 'Login timeout in seconds', (value: string) => parseInt(value, 10), 60)
     .usage('[options] [timeout]')
     .addHelpText('after', `
 Examples:
