@@ -7,10 +7,8 @@ jest.mock('../../utils/logger')
 const { mockPage, mockBrowser, mockContext } = jest.requireMock('rebrowser-playwright')
 
 jest.mock('../../auth/authManager', () => {
-  const { mockBrowser: mb } = jest.requireMock('rebrowser-playwright')
   return {
     AuthManager: jest.fn().mockImplementation(() => ({
-      getBrowser: jest.fn().mockResolvedValue(mb),
       getCookies: jest.fn().mockResolvedValue([]),
     })),
   }
@@ -47,7 +45,7 @@ describe('RedNoteTools', () => {
     BrowserFactory.newStealthContext.mockResolvedValue(mockContext)
     BrowserFactory.launch.mockResolvedValue(mockBrowser)
     mockContext.newPage.mockResolvedValue(mockPage)  // re-wire after clearAllMocks
-    tools = new RedNoteTools()
+    tools = new RedNoteTools({})
   })
 
   describe('initialize', () => {
@@ -58,7 +56,31 @@ describe('RedNoteTools', () => {
 
     it('throws "Not logged in" when page.evaluate returns false', async () => {
       mockPage.evaluate.mockResolvedValue(false)
-      await expect(tools.initialize()).rejects.toThrow('Not logged in')
+      await expect(tools.initialize()).rejects.toThrow('Not logged in. Please run: rednote-mcp init')
+    })
+
+    it('passes headless=false to BrowserFactory.launch by default', async () => {
+      const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
+      mockPage.evaluate.mockResolvedValue(true)
+      const t = new RedNoteTools({})
+      await t.initialize()
+      expect(BrowserFactory.launch).toHaveBeenCalledWith(false)
+    })
+
+    it('passes headless=true to BrowserFactory.launch when configured', async () => {
+      const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
+      mockPage.evaluate.mockResolvedValue(true)
+      const t = new RedNoteTools({ headless: true })
+      await t.initialize()
+      expect(BrowserFactory.launch).toHaveBeenCalledWith(true)
+    })
+
+    it('throws with helpful message when headless=true and not logged in', async () => {
+      const { BrowserFactory } = jest.requireMock('../../browser/browserFactory')
+      mockPage.evaluate.mockResolvedValue(false)
+      const t = new RedNoteTools({ headless: true })
+      await expect(t.initialize()).rejects.toThrow('Not logged in. Please run: rednote-mcp init')
+      expect(BrowserFactory.launch).toHaveBeenCalledWith(true)
     })
   })
 

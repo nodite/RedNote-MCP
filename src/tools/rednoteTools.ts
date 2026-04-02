@@ -24,22 +24,21 @@ export interface Comment {
 
 export class RedNoteTools {
   private authManager: AuthManager
+  private readonly config: { headless: boolean }
   private browser: Browser | null = null
   private context: BrowserContext | null = null
   private page: Page | null = null
 
-  constructor() {
+  constructor(config: { headless?: boolean } = {}) {
     logger.info('Initializing RedNoteTools')
+    this.config = { headless: config.headless ?? false }
     this.authManager = new AuthManager()
   }
 
   async initialize(): Promise<void> {
     logger.info('Initializing browser and page')
-    this.browser = await this.authManager.getBrowser()
-    if (!this.browser) {
-      throw new Error('Failed to initialize browser')
-    }
-    
+    this.browser = await BrowserFactory.launch(this.config.headless)
+
     try {
       this.context = await BrowserFactory.newStealthContext(this.browser)
       this.page = await this.context.newPage()
@@ -62,7 +61,7 @@ export class RedNoteTools {
       // If not logged in, perform login
       if (!isLoggedIn) {
         logger.error('Not logged in, please login first')
-        throw new Error('Not logged in')
+        throw new Error('Not logged in. Please run: rednote-mcp init')
       }
       logger.info('Login status verified')
     } catch (error) {
