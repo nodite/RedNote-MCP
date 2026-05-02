@@ -77,7 +77,7 @@ export class AuthManager {
 
         // Navigate to explore page
         logger.info('Navigating to explore page')
-        await this.page.goto('https://www.xiaohongshu.com/explore', {
+        await this.page.goto('https://www.rednote.com/explore', {
           waitUntil: 'networkidle',
           timeout: timeoutMs
         })
@@ -89,7 +89,7 @@ export class AuthManager {
           if (userSidebar) {
             isAlreadyLoggedIn = await this.page.evaluate(() => {
               const sidebarUser = document.querySelector('.user.side-bar-component .channel')
-              return sidebarUser?.textContent?.trim() === '我'
+              return sidebarUser?.textContent?.trim() === 'Me'
             })
           }
         } catch (checkErr) {
@@ -124,7 +124,7 @@ export class AuthManager {
         // Verify the text content
         const isLoggedIn = await this.page.evaluate(() => {
           const sidebarUser = document.querySelector('.user.side-bar-component .channel')
-          return sidebarUser?.textContent?.trim() === '我'
+          return sidebarUser?.textContent?.trim() === 'Me'
         })
 
         if (!isLoggedIn) {
