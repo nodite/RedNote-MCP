@@ -53,10 +53,10 @@ export class RedNoteTools {
 
       // Check login status
       logger.info('Checking login status')
-      await this.page.goto('https://www.rednote.com')
+      await this.page.goto('https://www.xiaohongshu.com')
       const isLoggedIn = await this.page.evaluate(() => {
         const sidebarUser = document.querySelector('.user.side-bar-component .channel')
-        return sidebarUser?.textContent?.trim() === 'Me'
+        return sidebarUser?.textContent?.trim() === '我'
       })
 
       // If not logged in, perform login
@@ -107,12 +107,12 @@ export class RedNoteTools {
       return xhslinkMatch[1]
     }
 
-    // 匹配 https://www.rednote.com/ 开头的链接
-    const rednoteRegex = /(https?:\/\/(?:www\.)?rednote\.com\/[^，\s]+)/i
-    const rednoteMatch = shareText.match(rednoteRegex)
+    // 匹配 https://www.xiaohongshu.com/ 开头的链接
+    const xiaohongshuRegex = /(https?:\/\/(?:www\.)?xiaohongshu\.com\/[^，\s]+)/i
+    const xiaohongshuMatch = shareText.match(xiaohongshuRegex)
 
-    if (rednoteMatch && rednoteMatch[1]) {
-      return rednoteMatch[1]
+    if (xiaohongshuMatch && xiaohongshuMatch[1]) {
+      return xiaohongshuMatch[1]
     }
 
     return shareText
@@ -126,7 +126,7 @@ export class RedNoteTools {
 
       // Navigate to search page
       logger.info('Navigating to search page')
-      await this.page.goto(`https://www.rednote.com/search_result?keyword=${encodeURIComponent(keywords)}`)
+      await this.page.goto(`https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(keywords)}`)
 
       // Wait for search results to load
       logger.info('Waiting for search results')
