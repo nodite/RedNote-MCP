@@ -8,6 +8,7 @@ const mockContext = {
 const mockPage = {
   goto: jest.fn().mockResolvedValue(undefined),
   waitForSelector: jest.fn().mockResolvedValue(undefined),
+  waitForFunction: jest.fn().mockResolvedValue(undefined),
   evaluate: jest.fn().mockResolvedValue(undefined),
   $: jest.fn().mockResolvedValue(null),
   $$: jest.fn().mockResolvedValue([]),

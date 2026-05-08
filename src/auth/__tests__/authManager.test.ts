@@ -99,7 +99,7 @@ describe('AuthManager', () => {
       expect(mockSave).toHaveBeenCalled()
     })
 
-    it('completes without error when no cookies, waitForSelector resolves, and evaluate returns logged-in', async () => {
+    it('completes without error when no cookies, waitForSelector resolves, and waitForFunction resolves', async () => {
       const mockSave = jest.fn().mockResolvedValue(undefined)
       CookieManager.mockImplementation(() => ({
         loadCookies: jest.fn().mockResolvedValue([]),
@@ -108,7 +108,7 @@ describe('AuthManager', () => {
 
       mockPage.$.mockResolvedValue(null)
       mockPage.waitForSelector.mockResolvedValue(undefined)
-      mockPage.evaluate.mockResolvedValue(true)
+      mockPage.waitForFunction.mockResolvedValue(undefined)
       mockContext.cookies.mockResolvedValue(sampleCookies)
 
       const auth = new AuthManager(COOKIE_PATH)
@@ -125,7 +125,7 @@ describe('AuthManager', () => {
 
       mockPage.$.mockResolvedValue(null)
       mockPage.waitForSelector.mockResolvedValue(undefined)
-      mockPage.evaluate.mockResolvedValue(false)
+      mockPage.waitForFunction.mockRejectedValue(new Error('Timeout exceeded'))
 
       jest.useFakeTimers()
       try {
