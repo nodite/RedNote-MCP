@@ -6,3 +6,4 @@ cookies.json
 .cursor
 logs/
 coverage/
+.playwright-mcp/

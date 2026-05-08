@@ -78,7 +78,7 @@ export class AuthManager {
         // Navigate to explore page
         logger.info('Navigating to explore page')
         await this.page.goto('https://www.xiaohongshu.com/explore', {
-          waitUntil: 'networkidle',
+          waitUntil: 'load',
           timeout: timeoutMs
         })
 
@@ -115,22 +115,15 @@ export class AuthManager {
           timeout: timeoutMs
         })
 
-        // Wait for user to complete login
+        // Wait for user to complete login — atomically wait until text === '我'
         logger.info('Waiting for user to complete login')
-        await this.page.waitForSelector('.user.side-bar-component .channel', {
-          timeout: timeoutMs * 6
-        })
-
-        // Verify the text content
-        const isLoggedIn = await this.page.evaluate(() => {
-          const sidebarUser = document.querySelector('.user.side-bar-component .channel')
-          return sidebarUser?.textContent?.trim() === '我'
-        })
-
-        if (!isLoggedIn) {
-          logger.error('Login verification failed')
-          throw new Error('Login verification failed')
-        }
+        await this.page.waitForFunction(
+          () => {
+            const el = document.querySelector('.user.side-bar-component .channel')
+            return el?.textContent?.trim() === '我'
+          },
+          { timeout: timeoutMs * 6 }
+        )
 
         logger.info('Login successful, saving cookies')
         // Save cookies after successful login
@@ -157,9 +150,9 @@ export class AuthManager {
 
   async cleanup(): Promise<void> {
     logger.info('Cleaning up browser resources')
-    if (this.page) await this.page.close()
-    if (this.context) await this.context.close()
-    if (this.browser) await this.browser.close()
+    try { if (this.page) await this.page.close() } catch { /* already closed */ }
+    try { if (this.context) await this.context.close() } catch { /* already closed */ }
+    try { if (this.browser) await this.browser.close() } catch { /* already closed */ }
     this.page = null
     this.context = null
     this.browser = null

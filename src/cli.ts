@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// Suppress rebrowser-patches internal navigation noise (harmless, non-fatal)
+const _origConsoleError = console.error
+console.error = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].startsWith('[rebrowser-patches]')) return
+  _origConsoleError(...args)
+}
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import * as z from 'zod/v4'
